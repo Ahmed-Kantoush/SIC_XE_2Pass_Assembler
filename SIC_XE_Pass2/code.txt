@@ -1,0 +1,57 @@
+LOADER  Start     0
+        JSUB      GETPAIR
+        STCH      ADDR
+        JSUB      GETPAIR       . GET LOAD POINT
+        STCH      ADDR2         .    INTO ADDR
+        JSUB      GETPAIR
+        STCH      ADDR3
+        LDB       ADDR          . MOVE IT TO BASE REG B
+        JSUB      GETPAIR
+        STCH      ADDR
+        JSUB      GETPAIR       . GET START ADDR
+        STCH      ADDR2         .    INTO ADDR
+        JSUB      GETPAIR
+        STCH      ADDR3
+LOOP   +JSUB      GETPAIR       . GET A BYTE OF SOURCE
+.       lll
+        STCH      ADDR, X       . STORE AT B+X WITH 0 DISP
+        J         LOOP
+        ADD       23
+       $ADD       LOOP
+.
+.          SUBROUTINE TO INPUT THE NEXT 2 CHARACTERS (HEX)
+.          CONVERTING TO NUMERIC FORM IN RIGHTMOST BYTE OF A
+.
+GETPAIR STL       RTADDR        . SAVE RETURN ADDRESS
+        JSUB      READ          . GET 1ST HEX DIGIT,
+        SHIFTL    A, D          .    SHIFT LEFT TO CORRECT
+        STCH      HEX           .    POSITION & HOLD IT
+        JSUB      READ          . GET 2ND HEX DIGIT,
+        OR        ORADDR        .    "OR" IT WITH THE 1ST
+        J        @RTADDR        .    TO FORM THE FULL BYTE
+.
+.          SUBROUTINE TO INPUT A CHARACTER (HEX)
+.          AND CONVERT IT TO NUMERIC FORM
+.
+        JEQ       READ          .    LOOPING UNTIL READY
+        COMP     #48            . SKIP IF NOT A
+        JLT       EOFCK         .    HEX CHARACTER
+        SUB      #48            . CONVERT FROM
+        COMP     #10            .    CHARACTER TO
+        JLT       GOBACK        .    NUMERIC FORM
+        SUB      #7
+GOBACK  RSUB
+EOFCK   COMP     #33            . EXIT ON "!" CHARACTER
+        JEQ       EXIT
+        COMP     #4             . EXIT ON EOF
+EXIT    J        @ADDR
+ADDR    RESB      1             . STORAGE 1ST FOR LOAD POINT
+ADDR2   RESB      1             .    THEN FOR START ADDRESS
+ADDR3   RESB      1
+RTADDR  RESB      1             . STORAGE FOR RSUB RETURN;
+ORADDR  RESB      1             .    THESE 2 BYTES USED BY
+        RESB      1             .    "OR"; EFFECT ON BYTE
+HEX     RESB      1             .    NAMED "HEX" IS ONLY
+        RESDW     4
+        BYTE      C'EOF'
+        End       LOADER        .    PART USED
